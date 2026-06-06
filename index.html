@@ -204,8 +204,8 @@
     <p class="meta">來源：PDF 第 4、5 頁渲染影像逐列核對。僅列外幣交易與國外交易手續費；台灣商戶交易未列入。</p>
 
     <section class="summary">
-      <div><span class="label">明細筆數</span><span class="value" id="summary-count">53</span></div>
-      <div><span class="label">台幣合計</span><span class="value" id="summary-total">NT$103,211</span></div>
+      <div><span class="label">明細筆數</span><span class="value" id="summary-count">55</span></div>
+      <div><span class="label">台幣合計</span><span class="value" id="summary-total">NT$104,981</span></div>
       <div><span class="label">起始消費日</span><span class="value">2026/05/28</span></div>
     </section>
 
@@ -227,6 +227,8 @@
         </tr>
       </thead>
       <tbody>
+        <tr><td>2026/05/28</td><td>2026/06/01</td><td>昇恒昌（股）公司桃園二期分公司 / TW TAOYUAN CITY（額外納入）</td><td></td><td class="num"></td><td class="num">590</td></tr>
+        <tr><td>2026/05/28</td><td>2026/06/01</td><td>昇恒昌（股）公司桃園二期分公司 / TW TAOYUAN CITY（額外納入）</td><td></td><td class="num"></td><td class="num">1,180</td></tr>
         <tr><td>2026/05/28</td><td>2026/06/02</td><td>SSIYU CU YUNNAMHAENGB / KOR SEOUL</td><td>2026/05/27</td><td class="num">42,450.00 KRW</td><td class="num">894</td></tr>
         <tr class="fee"><td>2026/05/28</td><td>2026/06/02</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">13</td></tr>
         <tr><td>2026/05/28</td><td>2026/06/02</td><td>BBQCHIKINENBIEO HONGDA / KOR SEOUL</td><td>2026/05/27</td><td class="num">56,400.00 KRW</td><td class="num">1,188</td></tr>
@@ -284,7 +286,7 @@
       <tfoot>
         <tr>
           <td colspan="5">合計</td>
-          <td class="num" id="table-total">NT$103,211</td>
+          <td class="num" id="table-total">NT$104,981</td>
         </tr>
       </tfoot>
     </table>
@@ -299,8 +301,8 @@
     const tableTotal = document.getElementById("table-total");
 
     const totals = {
-      all: { count: 53, total: 103211 },
-      normal: { count: 29, total: 102405 },
+      all: { count: 55, total: 104981 },
+      normal: { count: 31, total: 104175 },
       fee: { count: 24, total: 806 }
     };
 
