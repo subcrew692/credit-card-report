@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026/05/28 起外幣明細</title>
+  <style>
+    body {
+      margin: 0;
+      color: #202124;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif;
+      line-height: 1.45;
+    }
+    main {
+      max-width: 1180px;
+      margin: 28px auto 40px;
+      padding: 0 20px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      letter-spacing: 0;
+    }
+    .meta {
+      margin: 0 0 18px;
+      color: #667085;
+      font-size: 14px;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0 22px;
+    }
+    .summary div {
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .label {
+      display: block;
+      color: #667085;
+      font-size: 13px;
+    }
+    .value {
+      color: #0f766e;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #d0d5dd;
+      font-size: 14px;
+    }
+    th,
+    td {
+      border-bottom: 1px solid #d0d5dd;
+      padding: 8px 10px;
+      vertical-align: top;
+    }
+    th {
+      background: #f2f4f7;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .num {
+      text-align: right;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .fee {
+      color: #92400e;
+    }
+    .mobile-list {
+      display: none;
+    }
+    .mobile-card {
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .mobile-card[hidden] {
+      display: none;
+    }
+    .mobile-card summary {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      align-items: center;
+      cursor: pointer;
+      list-style: none;
+      padding: 12px 14px;
+    }
+    .mobile-card summary::-webkit-details-marker {
+      display: none;
+    }
+    .card-main {
+      min-width: 0;
+    }
+    .card-date {
+      color: #667085;
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+    .card-title {
+      font-weight: 700;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .card-amount {
+      color: #0f766e;
+      font-size: 17px;
+      font-weight: 700;
+      justify-self: end;
+      white-space: nowrap;
+    }
+    .mobile-card.fee-card .card-amount,
+    .mobile-card.fee-card .card-title {
+      color: #92400e;
+    }
+    .card-detail {
+      border-top: 1px solid #eaecf0;
+      padding: 10px 14px 12px;
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+    }
+    .detail-row {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 10px;
+    }
+    .detail-label {
+      color: #667085;
+    }
+    .badge {
+      display: inline-block;
+      border: 1px solid #f59e0b;
+      border-radius: 999px;
+      color: #92400e;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 1px 7px;
+      margin-left: 6px;
+      vertical-align: 1px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 14px;
+      border-bottom: 1px solid #d0d5dd;
+    }
+    .tab {
+      appearance: none;
+      border: 1px solid transparent;
+      border-bottom: 0;
+      border-radius: 8px 8px 0 0;
+      background: transparent;
+      color: #475467;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      padding: 9px 14px;
+    }
+    .tab[aria-selected="true"] {
+      background: #ffffff;
+      border-color: #d0d5dd;
+      color: #0f766e;
+      margin-bottom: -1px;
+    }
+    tfoot td {
+      background: #f8fafc;
+      font-weight: 700;
+    }
+    @media (max-width: 760px) {
+      main { padding: 0 12px; }
+      .summary { grid-template-columns: 1fr; }
+      h1 { font-size: 22px; }
+      .meta { font-size: 13px; }
+      .tabs {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fff;
+        overflow-x: auto;
+        padding-top: 8px;
+      }
+      .tab {
+        flex: 0 0 auto;
+        padding: 9px 12px;
+        white-space: nowrap;
+      }
+      table { display: none; }
+      .mobile-list { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>2026/05/28 起外幣明細</h1>
+    <p class="meta">來源：PDF 第 4、5 頁渲染影像逐列核對。僅列外幣交易與國外交易手續費；台灣商戶交易未列入。</p>
+
+    <section class="summary">
+      <div><span class="label">明細筆數</span><span class="value" id="summary-count">53</span></div>
+      <div><span class="label">台幣合計</span><span class="value" id="summary-total">NT$103,211</span></div>
+      <div><span class="label">起始消費日</span><span class="value">2026/05/28</span></div>
+    </section>
+
+    <nav class="tabs" aria-label="明細分類">
+      <button class="tab" type="button" data-filter="all" aria-selected="true">全部內容</button>
+      <button class="tab" type="button" data-filter="normal" aria-selected="false">移除手續費</button>
+      <button class="tab" type="button" data-filter="fee" aria-selected="false">純手續費</button>
+    </nav>
+
+    <table>
+      <thead>
+        <tr>
+          <th>消費日</th>
+          <th>入帳日</th>
+          <th>消費明細</th>
+          <th>外幣折算日</th>
+          <th class="num">幣別金額/幣別</th>
+          <th class="num">新台幣金額</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>2026/05/28</td><td>2026/06/02</td><td>SSIYU CU YUNNAMHAENGB / KOR SEOUL</td><td>2026/05/27</td><td class="num">42,450.00 KRW</td><td class="num">894</td></tr>
+        <tr class="fee"><td>2026/05/28</td><td>2026/06/02</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">13</td></tr>
+        <tr><td>2026/05/28</td><td>2026/06/02</td><td>BBQCHIKINENBIEO HONGDA / KOR SEOUL</td><td>2026/05/27</td><td class="num">56,400.00 KRW</td><td class="num">1,188</td></tr>
+        <tr class="fee"><td>2026/05/28</td><td>2026/06/02</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">18</td></tr>
+        <tr><td>2026/05/28</td><td>2026/06/03</td><td>Airport Railroad / KOR Incheon</td><td>2026/05/27</td><td class="num">26,250.00 KRW</td><td class="num">553</td></tr>
+        <tr class="fee"><td>2026/05/28</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">8</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/02</td><td>PAYPAL *DEEPSOULLLC / USA 4029357733</td><td></td><td class="num"></td><td class="num">256</td></tr>
+        <tr class="fee"><td>2026/05/29</td><td>2026/06/02</td><td>國外交易手續費 / USA</td><td></td><td class="num"></td><td class="num">4</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/02</td><td>GS25 YUNNAMHOHOJUM / KOR SEOUL</td><td>2026/05/28</td><td class="num">51,600.00 KRW</td><td class="num">1,084</td></tr>
+        <tr class="fee"><td>2026/05/29</td><td>2026/06/02</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">16</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/02</td><td>ODALIJIBGANJANGKEJANG / KOR SEOUL</td><td>2026/05/28</td><td class="num">260,000.00 KRW</td><td class="num">5,462</td></tr>
+        <tr class="fee"><td>2026/05/29</td><td>2026/06/02</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">82</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>CO. LTD. MUSINSA MUS / KOR SEOUL</td><td>2026/05/28</td><td class="num">327,900.00 KRW</td><td class="num">6,888</td></tr>
+        <tr class="fee"><td>2026/05/29</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">103</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>CO. LTD. MUSINSA MUS / KOR SEOUL</td><td>2026/05/28</td><td class="num">448,700.00 KRW</td><td class="num">9,426</td></tr>
+        <tr class="fee"><td>2026/05/29</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">141</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>SEOUL TRANSPORTATION C / KOR SEOUL</td><td>2026/05/28</td><td class="num">500.00 KRW</td><td class="num">11</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>SEOUL TRANSPORTATION C / KOR SEOUL</td><td>2026/05/28</td><td class="num">500.00 KRW</td><td class="num">11</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>SEOUL TRANSPORTATION C / KOR SEOUL</td><td>2026/05/28</td><td class="num">500.00 KRW</td><td class="num">11</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>SEOUL TRANSPORTATION C / KOR SEOUL</td><td>2026/05/28</td><td class="num">500.00 KRW</td><td class="num">11</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>SEOUL TRANSPORTATION C / KOR SEOUL</td><td>2026/05/28</td><td class="num">1,850.00 KRW</td><td class="num">39</td></tr>
+        <tr class="fee"><td>2026/05/29</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">1</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>SEOUL TRANSPORTATION C / KOR SEOUL</td><td>2026/05/28</td><td class="num">1,850.00 KRW</td><td class="num">39</td></tr>
+        <tr class="fee"><td>2026/05/29</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">1</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>SEOUL TRANSPORTATION C / KOR SEOUL</td><td>2026/05/28</td><td class="num">1,850.00 KRW</td><td class="num">39</td></tr>
+        <tr class="fee"><td>2026/05/29</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">1</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>SEOUL TRANSPORTATION C / KOR SEOUL</td><td>2026/05/28</td><td class="num">1,850.00 KRW</td><td class="num">39</td></tr>
+        <tr class="fee"><td>2026/05/29</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">1</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>IDAE JO BONE 2163 / KOR SEOUL</td><td>2026/05/28</td><td class="num">94,000.00 KRW</td><td class="num">1,975</td></tr>
+        <tr class="fee"><td>2026/05/29</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">30</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>SSIYU CU YUNNAMHAENGB / KOR SEOUL</td><td>2026/05/28</td><td class="num">6,600.00 KRW</td><td class="num">139</td></tr>
+        <tr class="fee"><td>2026/05/29</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">2</td></tr>
+        <tr><td>2026/05/29</td><td>2026/06/03</td><td>TOOSSEOMPEULLEISEU EUL / KOR Seoul</td><td>2026/05/28</td><td class="num">41,000.00 KRW</td><td class="num">861</td></tr>
+        <tr class="fee"><td>2026/05/29</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">13</td></tr>
+        <tr><td>2026/05/30</td><td>2026/06/03</td><td>CO. LTD. MUSINSA MUS / KOR SEOUL</td><td>2026/05/29</td><td class="num">254,500.00 KRW</td><td class="num">5,359</td></tr>
+        <tr class="fee"><td>2026/05/30</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">80</td></tr>
+        <tr><td>2026/05/30</td><td>2026/06/03</td><td>CO. LTD. MUSINSA MUS / KOR SEOUL</td><td>2026/05/29</td><td class="num">137,500.00 KRW</td><td class="num">2,896</td></tr>
+        <tr class="fee"><td>2026/05/30</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">43</td></tr>
+        <tr><td>2026/05/30</td><td>2026/06/03</td><td>BROTHER SPECIAL PART / KOR SEOUL</td><td>2026/05/29</td><td class="num">215,000.00 KRW</td><td class="num">4,528</td></tr>
+        <tr class="fee"><td>2026/05/30</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">68</td></tr>
+        <tr><td>2026/05/30</td><td>2026/06/03</td><td>GS25 YUNNAMHOHOJUM / KOR SEOUL</td><td>2026/05/29</td><td class="num">39,300.00 KRW</td><td class="num">828</td></tr>
+        <tr class="fee"><td>2026/05/30</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">12</td></tr>
+        <tr><td>2026/05/30</td><td>2026/06/03</td><td>DAKSPEKTER YUNNAM1HOJU / KOR SEOUL</td><td>2026/05/29</td><td class="num">144,000.00 KRW</td><td class="num">3,032</td></tr>
+        <tr class="fee"><td>2026/05/30</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">45</td></tr>
+        <tr><td>2026/05/30</td><td>2026/06/03</td><td>JOO ILAINDEUUEOLDEUPA / KOR Seoul</td><td>2026/05/29</td><td class="num">74,800.00 KRW</td><td class="num">1,575</td></tr>
+        <tr class="fee"><td>2026/05/30</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">24</td></tr>
+        <tr><td>2026/05/30</td><td>2026/06/03</td><td>SYUPEN HONGDAIJEOM / KOR Seoul</td><td>2026/05/29</td><td class="num">254,500.00 KRW</td><td class="num">5,359</td></tr>
+        <tr class="fee"><td>2026/05/30</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">80</td></tr>
+        <tr><td>2026/05/30</td><td>2026/06/03</td><td>SYUPEN HONGDAIJEOM / KOR Seoul</td><td>2026/05/29</td><td class="num">37,900.00 KRW</td><td class="num">798</td></tr>
+        <tr class="fee"><td>2026/05/30</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">12</td></tr>
+        <tr><td>2026/05/31</td><td>2026/06/03</td><td>KEOPIBINCOLIA HONGDAEY / KOR SEOUL</td><td>2026/05/30</td><td class="num">26,800.00 KRW</td><td class="num">564</td></tr>
+        <tr class="fee"><td>2026/05/31</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">8</td></tr>
+        <tr><td>2026/06/01</td><td>2026/06/03</td><td>昇恒昌（股）公司桃園二期分公司 / TW TAOYUAN CITY（額外納入）</td><td></td><td class="num"></td><td class="num">48,540</td></tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="5">合計</td>
+          <td class="num" id="table-total">NT$103,211</td>
+        </tr>
+      </tfoot>
+    </table>
+    <section class="mobile-list" id="mobile-list" aria-label="手機版明細清單"></section>
+  </main>
+  <script>
+    const tabs = document.querySelectorAll(".tab");
+    const rows = [...document.querySelectorAll("tbody tr")];
+    const mobileList = document.getElementById("mobile-list");
+    const summaryCount = document.getElementById("summary-count");
+    const summaryTotal = document.getElementById("summary-total");
+    const tableTotal = document.getElementById("table-total");
+
+    const totals = {
+      all: { count: 53, total: 103211 },
+      normal: { count: 29, total: 102405 },
+      fee: { count: 24, total: 806 }
+    };
+
+    function formatCurrency(value) {
+      return `NT$${value.toLocaleString("en-US")}`;
+    }
+
+    function textAt(cells, index) {
+      return cells[index]?.textContent.trim() || "";
+    }
+
+    function buildMobileCards() {
+      rows.forEach((row) => {
+        const cells = [...row.querySelectorAll("td")];
+        const isFee = row.classList.contains("fee");
+        const amount = textAt(cells, 5);
+        const title = textAt(cells, 2);
+        const details = document.createElement("details");
+        details.className = `mobile-card${isFee ? " fee-card" : ""}`;
+        details.dataset.kind = isFee ? "fee" : "normal";
+
+        details.innerHTML = `
+          <summary>
+            <span class="card-main">
+              <span class="card-date">${textAt(cells, 0)}</span>
+              <span class="card-title">${title}${isFee ? '<span class="badge">手續費</span>' : ""}</span>
+            </span>
+            <span class="card-amount">NT$${amount}</span>
+          </summary>
+          <div class="card-detail">
+            <div class="detail-row"><span class="detail-label">入帳日</span><span>${textAt(cells, 1) || "-"}</span></div>
+            <div class="detail-row"><span class="detail-label">折算日</span><span>${textAt(cells, 3) || "-"}</span></div>
+            <div class="detail-row"><span class="detail-label">原幣金額</span><span>${textAt(cells, 4) || "-"}</span></div>
+            <div class="detail-row"><span class="detail-label">完整項目</span><span>${title}</span></div>
+          </div>
+        `;
+        mobileList.appendChild(details);
+      });
+    }
+
+    function applyFilter(filter) {
+      rows.forEach((row) => {
+        const isFee = row.classList.contains("fee");
+        const show =
+          filter === "all" ||
+          (filter === "fee" && isFee) ||
+          (filter === "normal" && !isFee);
+        row.hidden = !show;
+      });
+      document.querySelectorAll(".mobile-card").forEach((card) => {
+        const isFee = card.dataset.kind === "fee";
+        const show =
+          filter === "all" ||
+          (filter === "fee" && isFee) ||
+          (filter === "normal" && !isFee);
+        card.hidden = !show;
+      });
+
+      tabs.forEach((tab) => {
+        tab.setAttribute("aria-selected", String(tab.dataset.filter === filter));
+      });
+
+      summaryCount.textContent = totals[filter].count.toLocaleString("en-US");
+      summaryTotal.textContent = formatCurrency(totals[filter].total);
+      tableTotal.textContent = formatCurrency(totals[filter].total);
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => applyFilter(tab.dataset.filter));
+    });
+
+    buildMobileCards();
+  </script>
+</body>
+</html>
