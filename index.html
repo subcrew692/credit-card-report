@@ -204,8 +204,8 @@
     <p class="meta">來源：PDF 第 4、5 頁渲染影像逐列核對。僅列外幣交易與國外交易手續費；台灣商戶交易未列入。</p>
 
     <section class="summary">
-      <div><span class="label">明細筆數</span><span class="value" id="summary-count">55</span></div>
-      <div><span class="label">台幣合計</span><span class="value" id="summary-total">NT$104,981</span></div>
+      <div><span class="label">明細筆數</span><span class="value" id="summary-count">65</span></div>
+      <div><span class="label">台幣合計</span><span class="value" id="summary-total">NT$124,763</span></div>
       <div><span class="label">起始消費日</span><span class="value">2026/05/28</span></div>
     </section>
 
@@ -279,14 +279,24 @@
         <tr class="fee"><td>2026/05/30</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">80</td></tr>
         <tr><td>2026/05/30</td><td>2026/06/03</td><td>SYUPEN HONGDAIJEOM / KOR Seoul</td><td>2026/05/29</td><td class="num">37,900.00 KRW</td><td class="num">798</td></tr>
         <tr class="fee"><td>2026/05/30</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">12</td></tr>
+        <tr><td>2026/05/30</td><td>2026/06/04</td><td>CJ OLIVE YOUNG OLIVE Y / KOR SEOUL</td><td>2026/05/29</td><td class="num">187,000.00 KRW</td><td class="num">3,938</td></tr>
+        <tr class="fee"><td>2026/05/30</td><td>2026/06/04</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">59</td></tr>
         <tr><td>2026/05/31</td><td>2026/06/03</td><td>KEOPIBINCOLIA HONGDAEY / KOR SEOUL</td><td>2026/05/30</td><td class="num">26,800.00 KRW</td><td class="num">564</td></tr>
         <tr class="fee"><td>2026/05/31</td><td>2026/06/03</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">8</td></tr>
+        <tr><td>2026/05/31</td><td>2026/06/04</td><td>MAPOGOBCHANGTAUN / KOR Seoul</td><td>2026/05/30</td><td class="num">154,000.00 KRW</td><td class="num">3,243</td></tr>
+        <tr class="fee"><td>2026/05/31</td><td>2026/06/04</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">49</td></tr>
+        <tr><td>2026/05/31</td><td>2026/06/04</td><td>CO. LTD. MUSINSA MUS / KOR SEOUL</td><td>2026/05/30</td><td class="num">381,900.00 KRW</td><td class="num">8,042</td></tr>
+        <tr class="fee"><td>2026/05/31</td><td>2026/06/04</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">121</td></tr>
+        <tr><td>2026/05/31</td><td>2026/06/04</td><td>CO. LTD. MUSINSA MUS / KOR SEOUL</td><td>2026/05/30</td><td class="num">181,600.00 KRW</td><td class="num">3,824</td></tr>
+        <tr class="fee"><td>2026/05/31</td><td>2026/06/04</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">57</td></tr>
         <tr><td>2026/06/01</td><td>2026/06/03</td><td>昇恒昌（股）公司桃園二期分公司 / TW TAOYUAN CITY（額外納入）</td><td></td><td class="num"></td><td class="num">48,540</td></tr>
+        <tr><td>2026/06/01</td><td>2026/06/08</td><td>Airport Railroad / KOR Incheon</td><td>2026/05/31</td><td class="num">21,000.00 KRW</td><td class="num">442</td></tr>
+        <tr class="fee"><td>2026/06/01</td><td>2026/06/08</td><td>國外交易手續費 / KOR</td><td></td><td class="num"></td><td class="num">7</td></tr>
       </tbody>
       <tfoot>
         <tr>
           <td colspan="5">合計</td>
-          <td class="num" id="table-total">NT$104,981</td>
+          <td class="num" id="table-total">NT$124,763</td>
         </tr>
       </tfoot>
     </table>
@@ -301,9 +311,9 @@
     const tableTotal = document.getElementById("table-total");
 
     const totals = {
-      all: { count: 55, total: 104981 },
-      normal: { count: 31, total: 104175 },
-      fee: { count: 24, total: 806 }
+      all: { count: 65, total: 124763 },
+      normal: { count: 36, total: 123664 },
+      fee: { count: 29, total: 1099 }
     };
 
     function formatCurrency(value) {
