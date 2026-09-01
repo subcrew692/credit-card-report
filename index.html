@@ -141,6 +141,21 @@
   .zone.callout .box{background:color-mix(in srgb,var(--surface) 55%,transparent)}
   .callout-note{font-size:13.5px;color:var(--muted);margin:-4px 0 14px;font-weight:300}
 
+  .add-form{display:flex;gap:8px;margin-top:10px;padding-top:12px;border-top:1px dashed var(--line);flex-wrap:wrap}
+  .add-form input{
+    flex:1;min-width:120px;font:inherit;font-size:13.5px;
+    padding:7px 10px;border-radius:8px;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink);
+  }
+  .add-form .add-input{flex:2}
+  .add-btn{
+    font:inherit;font-size:13px;font-weight:500;color:var(--surface);
+    background:var(--accent);border:none;border-radius:8px;padding:7px 16px;
+    cursor:pointer;transition:background .15s ease;
+  }
+  .add-btn:hover{background:var(--accent-deep)}
+  .add-btn:disabled{opacity:.5;cursor:default}
+
   footer{margin-top:34px;text-align:center;color:var(--faint);font-size:12.5px;line-height:1.8}
   .reset{
     background:none;border:1px solid var(--line);color:var(--muted);
@@ -197,6 +212,7 @@
   </footer>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 // theme: no stamp = follow system; explicit choice persists per device
 const THEME_KEY="xinjia-theme";
@@ -210,55 +226,17 @@ document.getElementById("themeToggle").addEventListener("click",()=>{
   try{localStorage.setItem(THEME_KEY,next)}catch(e){}
 });
 
+// Zone structure (title / english label / callout intro) is page layout,
+// not user data, so it stays here. The actual checklist items all live in
+// Supabase now (table `needs_items`) and are loaded in loadDbItems() below.
 const data=[
- {t:"玄關",en:"Entryway",items:[
-   {x:"落塵區"},
-   {x:"全身鏡",n:"灰鏡那種"},
-   {x:"玄關櫃 + 抽屜",n:"放鑰匙、手錶、口罩、香水"},
-   {x:"放外出包包、小孩書包、便當盒的地方"},
-   {x:"穿鞋椅"},
-   {x:"鞋櫃",n:"旋轉式鞋架"},
-   {x:"常穿的鞋要有開放式位置"},
- ]},
- {t:"飯廳",en:"Dining",items:[
-   {x:"置物櫃收納生活用品",n:"小倉庫概念"},
-   {x:"餐桌旁牆壁是否可做上下置物櫃"},
-   {x:"電器櫃",n:"電鍋、微波爐、氣炸鍋"},
-   {x:"放消毒鍋的地方"},
-   {x:"電器櫃連接置物櫃，上方可加零食櫃嗎"},
- ]},
- {t:"廚房",en:"Kitchen",items:[
-   {x:"廚房後面要收納櫃"},
-   {x:"抽屜放調味料的地方"},
- ]},
- {t:"客廳",en:"Living Room",items:[
-   {x:"電視牆要有氣氛燈"},
-   {x:"展示櫃 or 格子櫃"},
-   {x:"電視櫃懸空",n:"中間路由器那類想包起來（例如柵欄）"},
-   {x:"電視櫃抽屜只放遙控器小東西",n:"不用太深；留任家那樣的深度我們覺得太深了"},
-   {x:"預留音響 Soundbar"},
-   {x:"L 型沙發兩側不須放桌子"},
- ]},
- {t:"收納家電",en:"Appliances",callout:true,
-  note:"需要幫以下五位各找一個家安置：",items:[
-   {x:"掃地機器人"},
-   {x:"吸塵器"},
-   {x:"電風扇"},
-   {x:"除濕機"},
-   {x:"行李箱"},
- ]},
- {t:"陽台",en:"Balcony",items:[
-   {x:"汙衣籃",n:"分大人、小孩兩區"},
-   {x:"掛衣架區"},
-   {x:"曬衣桿"},
- ]},
- {t:"電腦間更衣室",en:"Study & Closet",items:[
-   {x:"汙衣櫃",n:"通風、簍空；穿過一次但還不用洗的衣服"},
-   {x:"衣櫃放大人的衣服"},
-   {x:"包包區"},
-   {x:"收納換季衣物、棉被"},
-   {x:"褲架",n:"穿過一次的褲子"},
- ]},
+ {t:"玄關",en:"Entryway"},
+ {t:"飯廳",en:"Dining"},
+ {t:"廚房",en:"Kitchen"},
+ {t:"客廳",en:"Living Room"},
+ {t:"收納家電",en:"Appliances",callout:true,note:"需要幫以下五位各找一個家安置："},
+ {t:"陽台",en:"Balcony"},
+ {t:"電腦間更衣室",en:"Study & Closet"},
 ];
 
 const KEY="xinjia-needs-v1";
@@ -267,29 +245,29 @@ try{state=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){state={}}
 
 const check='<svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>';
 const zones=document.getElementById("zones");
-let total=0, id=0;
+const zoneULs={};
+const zoneCounts={};
+let total=0;
 
 data.forEach((z,zi)=>{
-  const items=z.items.map(it=>{
-    const key="i"+(id++);
-    const done=state[key]?" done":"";
-    total++;
-    const note=it.n?`<span class="note">${it.n}</span>`:"";
-    return `<li class="item${done}" data-k="${key}">
-      <span class="box">${check}</span>
-      <span class="txt">${it.x}${note}</span></li>`;
-  }).join("");
   const note=z.note?`<p class="callout-note">${z.note}</p>`:"";
   zones.insertAdjacentHTML("beforeend",`
     <section class="zone${z.callout?" callout":""}">
       <div class="zone-head">
         <span class="idx">${String(zi+1).padStart(2,"0")}</span>
         <div class="zone-title"><h2>${z.t}</h2><div class="en">${z.en}</div></div>
-        <span class="count">${z.items.length} 項</span>
+        <span class="count">0 項</span>
       </div>
       ${note}
-      <ul class="items">${items}</ul>
+      <ul class="items" data-zone="${z.t}"></ul>
+      <form class="add-form" data-zone="${z.t}">
+        <input type="text" class="add-input" placeholder="新增項目…" maxlength="60" required>
+        <input type="text" class="add-note" placeholder="補充說明（選填）" maxlength="80">
+        <button type="submit" class="add-btn">新增</button>
+      </form>
     </section>`);
+  zoneULs[z.t]=zones.lastElementChild.querySelector("ul.items");
+  zoneCounts[z.t]={el:zones.lastElementChild.querySelector(".count"),n:0};
 });
 document.getElementById("total").textContent=total;
 
@@ -303,6 +281,75 @@ zones.addEventListener("click",e=>{
 document.getElementById("reset").addEventListener("click",()=>{
   state={};save();
   document.querySelectorAll("li.item.done").forEach(li=>li.classList.remove("done"));
+});
+
+// Supabase: all checklist items live in `needs_items` — loaded below and
+// appended into the zone list matching each row's `zone` column.
+const SUPABASE_URL="https://glqmbxcdgdikdfyrpfww.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdscW1ieGNkZ2Rpa2RmeXJwZnd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxOTQyMjMsImV4cCI6MjEwMDc3MDIyM30.xeRG1Cd0FZlrSnWZ8BUmXy4SXSE8gc2FSjbpYFLWQ4c";
+let sb=null;
+try{
+  if(window.supabase && !SUPABASE_URL.startsWith("YOUR_")){
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+  }
+}catch(e){console.error(e)}
+
+function renderDbItem(row){
+  const ul=zoneULs[row.zone];
+  if(!ul)return;
+  const key="db:"+row.id;
+  const li=document.createElement("li");
+  li.className="item"+(state[key]?" done":"");
+  li.dataset.k=key;
+  const box=document.createElement("span");
+  box.className="box";
+  box.innerHTML=check;
+  const txt=document.createElement("span");
+  txt.className="txt";
+  txt.appendChild(document.createTextNode(row.text));
+  if(row.note){
+    const note=document.createElement("span");
+    note.className="note";
+    note.textContent=row.note;
+    txt.appendChild(note);
+  }
+  li.appendChild(box);
+  li.appendChild(txt);
+  ul.appendChild(li);
+  total++;
+  document.getElementById("total").textContent=total;
+  const c=zoneCounts[row.zone];
+  if(c){c.n++;c.el.textContent=c.n+" 項";}
+}
+
+async function loadDbItems(){
+  if(!sb)return;
+  const {data:rows,error}=await sb.from("needs_items").select("*").order("created_at");
+  if(error){console.error(error);return;}
+  rows.forEach(renderDbItem);
+}
+loadDbItems();
+
+document.querySelectorAll(".add-form").forEach(form=>{
+  form.addEventListener("submit",async e=>{
+    e.preventDefault();
+    if(!sb){alert("尚未設定 Supabase，無法新增");return;}
+    const zone=form.dataset.zone;
+    const input=form.querySelector(".add-input");
+    const noteInput=form.querySelector(".add-note");
+    const text=input.value.trim();
+    if(!text)return;
+    const note=noteInput.value.trim()||null;
+    const btn=form.querySelector(".add-btn");
+    btn.disabled=true;
+    const {data:row,error}=await sb.from("needs_items")
+      .insert({zone,text,note}).select().single();
+    btn.disabled=false;
+    if(error){alert("新增失敗，請稍後再試");console.error(error);return;}
+    renderDbItem(row);
+    input.value="";
+    noteInput.value="";
+  });
 });
 </script>
 </body>
