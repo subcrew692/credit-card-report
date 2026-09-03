@@ -156,6 +156,27 @@
   .add-btn:hover{background:var(--accent-deep)}
   .add-btn:disabled{opacity:.5;cursor:default}
 
+  .item-actions{display:none;gap:4px;margin-left:auto;flex-shrink:0;padding-left:8px}
+  body.edit-mode .item-actions{display:flex}
+  .item-btn{
+    border:none;background:none;color:var(--faint);cursor:pointer;
+    padding:5px;border-radius:6px;display:grid;place-items:center;
+    transition:all .15s ease;
+  }
+  .item-btn:hover{color:var(--accent);background:var(--surface-2)}
+  .item-btn.danger:hover{color:#b5502f}
+  .item-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round}
+  li.item.editing{cursor:default;background:var(--surface-2)}
+  li.item.editing .txt{display:flex;flex-direction:column;gap:5px}
+  .edit-field,.edit-note-field{
+    font:inherit;padding:4px 8px;border-radius:6px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%;
+  }
+  .edit-field{font-size:15.5px}
+  .edit-note-field{font-size:13.5px;color:var(--muted)}
+  .edit-toggle.active{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+
   footer{margin-top:34px;text-align:center;color:var(--faint);font-size:12.5px;line-height:1.8}
   .reset{
     background:none;border:1px solid var(--line);color:var(--muted);
@@ -208,6 +229,7 @@
 
   <footer>
     <button class="reset" id="reset">清除所有勾選</button>
+    <button class="reset edit-toggle" id="editToggle" type="button">編輯模式</button>
     <div>勾選狀態只存在你這台裝置的瀏覽器，重新整理不會消失。</div>
   </footer>
 </div>
@@ -277,7 +299,13 @@ document.getElementById("total").textContent=total;
 
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
 zones.addEventListener("click",e=>{
-  const li=e.target.closest("li.item");if(!li)return;
+  const editBtn=e.target.closest(".edit-btn");
+  if(editBtn){startEdit(editBtn.closest("li.item"));return;}
+  const delBtn=e.target.closest(".delete-btn");
+  if(delBtn){deleteItem(delBtn.closest("li.item"));return;}
+  if(e.target.closest(".item-actions"))return;
+  const li=e.target.closest("li.item");
+  if(!li||li.classList.contains("editing"))return;
   const k=li.dataset.k;
   if(li.classList.toggle("done"))state[k]=1;else delete state[k];
   save();
@@ -298,6 +326,18 @@ try{
   }
 }catch(e){console.error(e)}
 
+function itemActionButtonsHtml(){
+  return `<button type="button" class="item-btn edit-btn" title="編輯" aria-label="編輯">
+      <svg viewBox="0 0 24 24"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg>
+    </button>
+    <button type="button" class="item-btn danger delete-btn" title="刪除" aria-label="刪除">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+    </button>`;
+}
+function itemActionsHtml(){
+  return `<span class="item-actions">${itemActionButtonsHtml()}</span>`;
+}
+
 function renderDbItem(row){
   const ul=zoneULs[row.zone];
   if(!ul)return;
@@ -305,6 +345,8 @@ function renderDbItem(row){
   const li=document.createElement("li");
   li.className="item"+(state[key]?" done":"");
   li.dataset.k=key;
+  li.dataset.id=row.id;
+  li.dataset.zone=row.zone;
   const box=document.createElement("span");
   box.className="box";
   box.innerHTML=check;
@@ -319,6 +361,7 @@ function renderDbItem(row){
   }
   li.appendChild(box);
   li.appendChild(txt);
+  li.insertAdjacentHTML("beforeend",itemActionsHtml());
   ul.appendChild(li);
   total++;
   document.getElementById("total").textContent=total;
@@ -355,6 +398,97 @@ document.querySelectorAll(".add-form").forEach(form=>{
     noteInput.value="";
   });
 });
+
+// Edit mode toggle — no gate, just hides edit/delete controls by default
+// to keep the plain view uncluttered. Anyone with the link can flip it.
+const EDIT_KEY="xinjia-edit-mode";
+const editToggle=document.getElementById("editToggle");
+try{
+  if(localStorage.getItem(EDIT_KEY)==="1")document.body.classList.add("edit-mode");
+}catch(e){}
+function updateEditToggle(){
+  const on=document.body.classList.contains("edit-mode");
+  editToggle.textContent=on?"結束編輯":"編輯模式";
+  editToggle.classList.toggle("active",on);
+}
+updateEditToggle();
+editToggle.addEventListener("click",()=>{
+  const on=document.body.classList.toggle("edit-mode");
+  try{
+    if(on)localStorage.setItem(EDIT_KEY,"1");else localStorage.removeItem(EDIT_KEY);
+  }catch(e){}
+  updateEditToggle();
+});
+
+function startEdit(li){
+  if(!li||li.classList.contains("editing"))return;
+  li.classList.add("editing");
+  const txt=li.querySelector(".txt");
+  const originalText=txt.childNodes[0].textContent;
+  const noteEl=txt.querySelector(".note");
+  const originalNote=noteEl?noteEl.textContent:"";
+  const actions=li.querySelector(".item-actions");
+
+  txt.innerHTML="";
+  const textInput=document.createElement("input");
+  textInput.type="text";textInput.className="edit-field";textInput.maxLength=60;
+  textInput.value=originalText;
+  const noteInput=document.createElement("input");
+  noteInput.type="text";noteInput.className="edit-note-field";noteInput.maxLength=80;
+  noteInput.placeholder="補充說明（選填）";noteInput.value=originalNote;
+  txt.appendChild(textInput);
+  txt.appendChild(noteInput);
+
+  actions.innerHTML=`
+    <button type="button" class="item-btn save-btn" title="儲存" aria-label="儲存">
+      <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+    </button>
+    <button type="button" class="item-btn cancel-btn" title="取消" aria-label="取消">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>`;
+  textInput.focus();
+
+  function finishEdit(text,note){
+    li.classList.remove("editing");
+    txt.innerHTML="";
+    txt.appendChild(document.createTextNode(text));
+    if(note){
+      const n=document.createElement("span");
+      n.className="note";n.textContent=note;
+      txt.appendChild(n);
+    }
+    actions.innerHTML=itemActionButtonsHtml();
+  }
+
+  actions.querySelector(".cancel-btn").addEventListener("click",()=>{
+    finishEdit(originalText,originalNote);
+  });
+  actions.querySelector(".save-btn").addEventListener("click",async()=>{
+    const newText=textInput.value.trim();
+    if(!newText){alert("內容不能空白");return;}
+    const newNote=noteInput.value.trim()||null;
+    const saveBtn=actions.querySelector(".save-btn");
+    saveBtn.disabled=true;
+    const {error}=await sb.from("needs_items")
+      .update({text:newText,note:newNote}).eq("id",li.dataset.id);
+    saveBtn.disabled=false;
+    if(error){alert("儲存失敗，請稍後再試");console.error(error);return;}
+    finishEdit(newText,newNote);
+  });
+}
+
+async function deleteItem(li){
+  if(!li)return;
+  const text=li.querySelector(".txt").childNodes[0].textContent;
+  if(!confirm(`確定要刪除「${text}」嗎？`))return;
+  const {error}=await sb.from("needs_items").delete().eq("id",li.dataset.id);
+  if(error){alert("刪除失敗，請稍後再試");console.error(error);return;}
+  li.remove();
+  total--;
+  document.getElementById("total").textContent=total;
+  const c=zoneCounts[li.dataset.zone];
+  if(c){c.n--;c.el.textContent=c.n+" 項";}
+}
 </script>
 </body>
 </html>
