@@ -64,6 +64,15 @@
   }
   .wrap{max-width:940px;margin:0 auto;padding:clamp(28px,5vw,68px) clamp(18px,4vw,40px) 90px}
 
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:clamp(24px,4vw,36px);padding-right:48px}
+  .tab{
+    font:inherit;font-size:13px;padding:7px 16px;border-radius:999px;
+    border:1px solid var(--line);background:none;color:var(--muted);
+    cursor:pointer;transition:all .15s ease;
+  }
+  .tab:hover{border-color:var(--accent);color:var(--accent)}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:500}
+
   header{margin-bottom:clamp(30px,5vw,52px)}
   .kicker{
     font-size:12px;letter-spacing:.34em;text-transform:uppercase;
@@ -214,18 +223,9 @@
   <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.3 6.3 0 0 0 10.5 10.5z"/></svg>
 </button>
 <div class="wrap">
-  <header>
-    <p class="kicker">給設計師的空間需求</p>
-    <h1>新家收納<span class="light">＆機能清單</span></h1>
-    <p class="lede">依照進門到房間的動線，把每個空間想要的收納與機能整理成一份清單。括號內是補充說明，方便討論時對照。</p>
-    <div class="meta">
-      <span>共 <b>11</b> 個空間</span>
-      <span><b id="total">0</b> 項需求</span>
-      <span>可點選項目<b> 打勾</b>確認</span>
-    </div>
-  </header>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="切換清單"></nav>
 
-  <main id="zones"></main>
+  <div id="pages"></div>
 
   <footer>
     <button class="reset" id="reset">清除所有勾選</button>
@@ -248,10 +248,15 @@ document.getElementById("themeToggle").addEventListener("click",()=>{
   try{localStorage.setItem(THEME_KEY,next)}catch(e){}
 });
 
-// Zone structure (title / english label / callout intro) is page layout,
-// not user data, so it stays here. The actual checklist items all live in
-// Supabase now (table `needs_items`) and are loaded in loadDbItems() below.
-const data=[
+// Page + zone structure (titles / english label / callout intro) is page
+// layout, not user data, so it stays here. The actual checklist items all
+// live in Supabase (table `needs_items`) and are loaded in loadDbItems().
+//
+// Each item row is matched to a zone by its `zone` column. That value is the
+// zone's `k` if it has one, otherwise its title `t`. Zones with a `k` can be
+// retitled freely; never change a `k` (or a k-less `t`) once items exist,
+// or those items stop showing up.
+const spaces=[
  {t:"玄關",en:"Entryway"},
  {t:"飯廳",en:"Dining"},
  {t:"廚房",en:"Kitchen"},
@@ -264,38 +269,98 @@ const data=[
  {t:"主衛浴",en:"Master Bathroom"},
  {t:"次衛浴",en:"Second Bathroom"},
 ];
+const pages=[
+ {id:"needs",kicker:"給設計師的空間需求",h1:["新家收納","＆機能清單"],
+  lede:"依照進門到房間的動線，把每個空間想要的收納與機能整理成一份清單。括號內是補充說明，方便討論時對照。",
+  unit:"個空間",itemUnit:"項需求",
+  zones:spaces},
+ // Same 11 spaces; rows are stored with zone = "followup:<space>" so they
+ // stay separate from the needs list in the same table.
+ {id:"followup",kicker:"討論紀錄與待調整事項",h1:["後續討論","＆修改調整"],
+  lede:"和設計師討論後的結論，以及需要修改調整的地方，都記在這裡。",
+  unit:"個空間",itemUnit:"項",
+  zones:spaces.map(z=>({k:"followup:"+z.t,t:z.t,en:z.en,callout:z.callout}))},
+];
 
 const KEY="xinjia-needs-v1";
 let state={};
 try{state=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){state={}}
 
 const check='<svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>';
-const zones=document.getElementById("zones");
+const zones=document.getElementById("pages");
+const tabsEl=document.getElementById("tabs");
 const zoneULs={};
 const zoneCounts={};
-let total=0;
+const zoneTotals={};
+function bumpTotal(zone,d){
+  const p=zoneTotals[zone];
+  if(!p)return;
+  p.n+=d;p.el.textContent=p.n;
+}
 
-data.forEach((z,zi)=>{
-  const note=z.note?`<p class="callout-note">${z.note}</p>`:"";
+pages.forEach(p=>{
+  tabsEl.insertAdjacentHTML("beforeend",
+    `<button type="button" class="tab" role="tab" data-page="${p.id}">${p.h1.join("")}</button>`);
   zones.insertAdjacentHTML("beforeend",`
-    <section class="zone${z.callout?" callout":""}">
-      <div class="zone-head">
-        <span class="idx">${String(zi+1).padStart(2,"0")}</span>
-        <div class="zone-title"><h2>${z.t}</h2><div class="en">${z.en}</div></div>
-        <span class="count">0 項</span>
-      </div>
-      ${note}
-      <ul class="items" data-zone="${z.t}"></ul>
-      <form class="add-form" data-zone="${z.t}">
-        <input type="text" class="add-input" placeholder="新增項目…" maxlength="60" required>
-        <input type="text" class="add-note" placeholder="補充說明（選填）" maxlength="80">
-        <button type="submit" class="add-btn">新增</button>
-      </form>
+    <section class="page" data-page="${p.id}" hidden>
+      <header>
+        <p class="kicker">${p.kicker}</p>
+        <h1>${p.h1[0]}<span class="light">${p.h1[1]}</span></h1>
+        ${p.lede?`<p class="lede">${p.lede}</p>`:""}
+        <div class="meta">
+          <span>共 <b>${p.zones.length}</b> ${p.unit}</span>
+          <span><b class="total">0</b> ${p.itemUnit}</span>
+          <span>可點選項目<b> 打勾</b>確認</span>
+        </div>
+      </header>
+      <main class="zones"></main>
     </section>`);
-  zoneULs[z.t]=zones.lastElementChild.querySelector("ul.items");
-  zoneCounts[z.t]={el:zones.lastElementChild.querySelector(".count"),n:0};
+  const pageEl=zones.lastElementChild;
+  const zonesEl=pageEl.querySelector(".zones");
+  const pageTotal={el:pageEl.querySelector(".total"),n:0};
+  p.zones.forEach((z,zi)=>{
+    const k=z.k||z.t;
+    const note=z.note?`<p class="callout-note">${z.note}</p>`:"";
+    zonesEl.insertAdjacentHTML("beforeend",`
+      <section class="zone${z.callout?" callout":""}">
+        <div class="zone-head">
+          <span class="idx">${String(zi+1).padStart(2,"0")}</span>
+          <div class="zone-title"><h2>${z.t}</h2><div class="en">${z.en}</div></div>
+          <span class="count">0 項</span>
+        </div>
+        ${note}
+        <ul class="items" data-zone="${k}"></ul>
+        <form class="add-form" data-zone="${k}">
+          <input type="text" class="add-input" placeholder="新增項目…" maxlength="60" required>
+          <input type="text" class="add-note" placeholder="補充說明（選填）" maxlength="80">
+          <button type="submit" class="add-btn">新增</button>
+        </form>
+      </section>`);
+    zoneULs[k]=zonesEl.lastElementChild.querySelector("ul.items");
+    zoneCounts[k]={el:zonesEl.lastElementChild.querySelector(".count"),n:0};
+    zoneTotals[k]=pageTotal;
+  });
 });
-document.getElementById("total").textContent=total;
+
+// tabs: remember the last opened page per device
+const TAB_KEY="xinjia-tab";
+function showPage(id){
+  if(!pages.some(p=>p.id===id))id=pages[0].id;
+  zones.querySelectorAll(".page").forEach(el=>{el.hidden=el.dataset.page!==id});
+  tabsEl.querySelectorAll(".tab").forEach(b=>{
+    const on=b.dataset.page===id;
+    b.classList.toggle("active",on);
+    b.setAttribute("aria-selected",on?"true":"false");
+  });
+  try{localStorage.setItem(TAB_KEY,id)}catch(e){}
+}
+tabsEl.addEventListener("click",e=>{
+  const b=e.target.closest(".tab");
+  if(b){showPage(b.dataset.page);window.scrollTo(0,0);}
+});
+let startTab=null;
+try{startTab=localStorage.getItem(TAB_KEY)}catch(e){}
+showPage(startTab);
 
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
 zones.addEventListener("click",e=>{
@@ -363,8 +428,7 @@ function renderDbItem(row){
   li.appendChild(txt);
   li.insertAdjacentHTML("beforeend",itemActionsHtml());
   ul.appendChild(li);
-  total++;
-  document.getElementById("total").textContent=total;
+  bumpTotal(row.zone,1);
   const c=zoneCounts[row.zone];
   if(c){c.n++;c.el.textContent=c.n+" 項";}
 }
@@ -484,8 +548,7 @@ async function deleteItem(li){
   const {error}=await sb.from("needs_items").delete().eq("id",li.dataset.id);
   if(error){alert("刪除失敗，請稍後再試");console.error(error);return;}
   li.remove();
-  total--;
-  document.getElementById("total").textContent=total;
+  bumpTotal(li.dataset.zone,-1);
   const c=zoneCounts[li.dataset.zone];
   if(c){c.n--;c.el.textContent=c.n+" 項";}
 }
